@@ -60,22 +60,50 @@ measurement remains an explicit Phase 8 item.
 
 ## Phase 3 — orgs, members, invites
 
-_Anything you had to work out that no document states. Invite lifecycle states are a common
-source of this._
+### 2026-09-26 · Rank rule corrected by the integrated contract
+
+My first assertCanModify required the caller's rank to be strictly greater than the target's in
+every case. The API suite reached 65/66 and rejected an owner demoting another owner even though
+the org had two owners. That showed the rank table's equal-role refusal needs a narrow owner peer
+exception; assertNotLastOwner remains the separate invariant that prevents removing the final
+owner. After the change the API suite passed 66/66.
+
+Invite redemption is one transaction across user creation, membership activation, and token
+consumption. Raw invite and refresh credentials are returned only to the caller while HMAC hashes
+are stored. The database's partial unique invite index decides duplicate live invites.
 
 ## Phase 4 — devices and grants
 
-_What happens at the boundary where two grants disagree, or where a grant's scope and the
-question's scope differ? Say what you predicted and what you got._
+### 2026-09-26 · Database constraints are the final validator
+
+Grant creation checks shape and no-laundering in code, then inserts permission patterns inside a
+transaction. Unknown strings reach the grant_permissions foreign key and are translated from
+SQLITE_CONSTRAINT_FOREIGNKEY to 400 VALIDATION with unknown_permission. The public API suite
+confirmed device:teleport is rejected while the separate personalized suite confirms an
+undocumented but catalogued permission works.
 
 ## Phase 5 — sessions
 
-_Two permissions, one device. What did you have to resolve, and in what order, to keep the two
-failure reasons distinguishable?_
+### 2026-09-26 · Keep compound failures and live authority separate
+
+The session start path resolves once for the exact device, checks session:start first, then the
+mode permission. This preserves missing_permission versus missing_device_permission. The first API
+run then failed while locating the newly active session: I had camel-cased session response keys,
+but the contract consumes device_id and end_reason. I restored schema-shaped session rows; the
+next run reached the rank-rule failure above, and the final run passed all 66 checks.
+
+Role changes only bump perm_version, so a new request sees TOKEN_STALE while the session's
+authorized_by snapshot remains active. Suspension calls the shared endActiveSessions path and the
+suite observed user_suspended, proving the lifecycle distinction.
 
 ## Phase 6 — audit
 
-_What did you decide counts as an auditable event, and what pushed you to that line?_
+### 2026-09-26 · Denied session attempts are durable evidence
+
+I wrapped the compound session authorization with auditDenials so a 403 creates one deny row with
+the exact reason before rethrowing. Success is inserted in the same transaction as the session,
+preventing an audit claim without its state change. The API suite found both an allow path and a
+denial carrying a reason code; SQLite triggers protect both from update and delete.
 
 ## Phase 7 — the console
 

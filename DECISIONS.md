@@ -65,6 +65,48 @@ permission-version changes and time-bound grant expiry, creating stale-authority
 **What would change my mind:** measured latency outside the stated target after the batched query
 path is made constant with respect to device count.
 
+---
+
+### Last-owner protection is separate from ordinary rank comparison
+
+**What I chose:** owners may modify peer owners, followed by an independent last-owner check;
+other callers still require strictly greater rank than the target.
+**Why:** my first uniform strict-rank implementation produced 65/66 in check-api.js: the
+"demoting a NON-last owner" case returned 403. Allowing the owner peer case while retaining
+assertNotLastOwner moved the suite to 66/66.
+**What I rejected:** allowing every equal-rank modification. That would let admin modify admin,
+which the stated authority rule explicitly refuses.
+**What would change my mind:** a contract test requiring owner-to-owner changes to be rejected,
+paired with another supported mechanism for reducing multiple owners.
+
+---
+
+### Session authority is a snapshot and account events end sessions
+
+**What I chose:** store role and grant provenance in authorized_by at creation; role and grant
+changes only stale future requests, while suspension, removal, and transfer call one shared
+session-ending function.
+**Why:** check-api.js observes both sides: a role demotion leaves the existing session active and
+returns TOKEN_STALE on the next request, while suspension ends that same session with
+user_suspended. The final API run passed all 66 assertions.
+**What I rejected:** recomputing permission for a live session. It would retroactively revoke a
+session on routine grant or role changes and erase the authority that admitted it.
+**What would change my mind:** a product requirement for immediate revocation that also changes
+the session model and its bounded-expiry contract.
+
+---
+
+### Successful state changes and their audit row share a transaction
+
+**What I chose:** write successful audit events in the mutation transaction and write permission
+denials once at the authorization boundary.
+**Why:** check-api.js requires denied attempts with reason codes. Keeping successful writes in the
+same transaction avoids an audit row claiming a change that rolled back.
+**What I rejected:** a global success logger around every route. It cannot know whether a nested
+transaction committed and easily produces duplicate rows.
+**What would change my mind:** an outbox or event-store architecture with atomic persistence and
+idempotent delivery guarantees.
+
 ## Where this repo argues with itself
 
 ### The published root and generated handout disagree about what ships

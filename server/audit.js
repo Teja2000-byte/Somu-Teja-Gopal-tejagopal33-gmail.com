@@ -1,3 +1,6 @@
+import { newId } from './db.js';
+import { HttpError } from './http.js';
+
 // Append-only audit writes.
 //
 // YOURS TO WRITE. This file ships as a stub.
@@ -20,10 +23,17 @@ const todo = (name) =>
   );
 
 export function audit(db, { orgId, actorId, action, targetType, targetId, result, reasonCode, requestId }) {
-  throw todo('audit');
+  db.prepare('INSERT INTO audit_events (id,org_id,actor_id,action,target_type,target_id,result,reason_code,request_id) VALUES (?,?,?,?,?,?,?,?,?)')
+    .run(newId('aud'), orgId, actorId ?? null, action, targetType ?? null, targetId ?? null,
+      result, reasonCode ?? null, requestId ?? null);
 }
 
 // Run fn(); if it refuses with a permission error, record the denial before rethrowing.
 export function auditDenials(db, ctx, meta, fn) {
-  throw todo('auditDenials');
+  try { return fn(); } catch (error) {
+    if (error instanceof HttpError && error.status === 403) {
+      audit(db, { orgId: ctx.orgId, actorId: ctx.userId, result: 'deny', reasonCode: error.reason, requestId: ctx.requestId, ...meta });
+    }
+    throw error;
+  }
 }
