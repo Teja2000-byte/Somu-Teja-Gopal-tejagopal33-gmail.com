@@ -165,3 +165,11 @@ elements and the tested create-organization, create-grant, invite, switching, an
 flows. I left secondary management controls such as rename, suspend, remove, and session start as
 visible inventory actions without full dialogs. This keeps the submitted behavior centered on the
 graded authorization model and avoids shallow forms that I could not harden in the time box.
+
+## Tool and source acknowledgements
+
+I used OpenAI Codex as a coding collaborator to inspect the supplied requirements and tests,
+implement and debug the server and React console, run the public verification suites, and draft
+the contemporaneous build and decision notes. I reviewed the resulting behavior through the
+repository's executable checks. Runtime dependencies are the packages already declared by the
+starter in package.json; no code was copied from another candidate or public solution.
