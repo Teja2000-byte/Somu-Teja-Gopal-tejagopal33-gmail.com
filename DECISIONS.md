@@ -107,6 +107,32 @@ transaction committed and easily produces duplicate rows.
 **What would change my mind:** an outbox or event-store architecture with atomic persistence and
 idempotent delivery guarantees.
 
+---
+
+### The console renders authorization answers instead of role rules
+
+**What I chose:** gate navigation with the org-level permissions from /auth/me and gate device
+actions with each row's permissions object from /devices.
+**Why:** Playwright's intercepted-response case changes device:control to deny without changing the
+role. The button disappeared and the full browser suite passed 25/25 after rebuilding the bundle.
+**What I rejected:** a frontend role matrix. It would ignore grants, denies, device scope, and the
+personalized database role, and would fail the intercepted-response case.
+**What would change my mind:** a server-rendered UI where the same backend resolver controls element
+presence before HTML reaches the browser.
+
+---
+
+### Access tokens live only in process memory
+
+**What I chose:** keep the access token in a module variable and restore a page reload through the
+httpOnly refresh cookie.
+**Why:** Playwright verified both empty local/session storage and successful reload recovery. Two
+isolated browser contexts also remained independently scoped to different organizations.
+**What I rejected:** localStorage persistence. Any script running in the page could read the bearer
+credential, and a shared persisted org token would complicate independent tabs.
+**What would change my mind:** moving authentication to a server-side session design with no bearer
+token exposed to browser JavaScript.
+
 ## Where this repo argues with itself
 
 ### The published root and generated handout disagree about what ships
@@ -120,6 +146,13 @@ our implementation, and recorded this choice here so the source is explicit.
 The invitation says to fork or use the repository as a template, but GitHub reports that it is not
 configured as a template, and a direct fork includes the organizer-only reference tree. I created
 a clean repository from only the generated handout to avoid submitting reference code.
+
+### The Playwright comment and command disagree
+
+playwright.config.js says npm test builds the SPA first, but the configured webServer command is
+node scripts/load-db.js followed by node server/index.js. It serves the existing dist directory.
+I built explicitly before the browser suite. The evidence was a second run showing the old hashed
+JavaScript asset and the same removed bug until npm run build regenerated dist.
 
 ## Deliberately not built
 

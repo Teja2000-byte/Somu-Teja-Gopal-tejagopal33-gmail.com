@@ -107,7 +107,21 @@ denial carrying a reason code; SQLite triggers protect both from update and dele
 
 ## Phase 7 — the console
 
-_Where did the server's answer and your instinct disagree about what should be on screen?_
+### 2026-09-26 · React cleanup bug and a stale production bundle
+
+The first browser run passed 13/25. Login, base role views, per-device hiding, memory-only tokens,
+reload, invites, and error feedback worked, but every route or organization switch later crashed.
+The trace reported TypeError: m is not a function: my effects returned the Promise from load(), so
+React treated it as a cleanup callback. I changed the effect wrapper to return undefined.
+
+The immediate rerun appeared unchanged. The trace still named the old hashed bundle, revealing that
+playwright.config.js claims to build before serving but its command only resets the database and
+starts Node. An explicit npm run build followed by Playwright passed 25/25 in 9.4 seconds. This was
+a tooling-state failure, not a second application bug, and the stale asset hash was the evidence.
+
+The console keeps access tokens in module memory and uses the httpOnly refresh cookie after reload.
+It renders navigation from /auth/me and row actions from each device's resolved map; the response
+interception test removed Control without any role logic in the browser.
 
 ## Phase 8 — hardening
 
