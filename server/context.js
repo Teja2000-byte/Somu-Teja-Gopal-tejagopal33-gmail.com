@@ -1,3 +1,6 @@
+import { assertFresh, verifyAccessToken } from './auth.js';
+import { forbidden, notFound, unauthenticated } from './http.js';
+
 // Per-request context: turn a bearer token into an authenticated caller.
 //
 // YOURS TO WRITE. This file ships as a stub so the server boots and every
@@ -24,6 +27,16 @@ const todo = () =>
 
 export function authenticate(db, secret) {
   return function buildContext(req, params) {
-    throw todo();
+    const match = /^Bearer ([^ ]+)$/.exec(String(req.headers.authorization ?? ''));
+    if (!match) throw unauthenticated();
+    const claims = verifyAccessToken(match[1], secret);
+    if (typeof claims.sub !== 'string' || !claims.sub || typeof claims.org !== 'string' || !claims.org) throw unauthenticated('invalid access token');
+    if (params.org !== undefined && params.org !== claims.org) throw notFound();
+    const membership = db.prepare('SELECT m.*, u.email, u.name AS user_name, o.name AS org_name, o.theme AS org_theme FROM memberships m JOIN users u ON u.id=m.user_id JOIN organizations o ON o.id=m.org_id AND o.deleted_at IS NULL WHERE m.user_id=? AND m.org_id=?').get(claims.sub, claims.org);
+    assertFresh(claims, membership);
+    if (membership.status === 'removed') throw unauthenticated('membership removed');
+    if (membership.status !== 'active') throw forbidden('membership is suspended', 'suspended');
+    if (claims.role !== membership.role) throw unauthenticated('invalid access token');
+    return { userId: claims.sub, orgId: claims.org, role: membership.role, membership, claims };
   };
 }

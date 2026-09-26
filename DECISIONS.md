@@ -38,6 +38,33 @@ input proceed farther than intended, while timingSafeEqual itself throws on uneq
 **What would change my mind:** adopting a maintained JWT library with equally strict algorithm,
 claim, and error-normalization behavior.
 
+---
+
+### Org-level permissions are a union of device answers
+
+**What I chose:** compute the org-wide answer, then promote a permission to allow when at least one
+device-specific answer allows it. Exact action checks continue to resolve against one device.
+**Why:** the Phase 2 reading corrected my initial org-only model: a device-scoped control grant must
+surface navigation while remaining absent from every other row. The public permission suite's
+Globex case and 35/35 result exercise the exact-device half of this split.
+**What I rejected:** ignoring device grants for org-level resolution. It would hide a usable
+surface even though an action is available on one device.
+**What would change my mind:** an API contract that defines navigation independently from device
+capability instead of as the union across devices.
+
+---
+
+### Permission answers remain uncached until measurement justifies caching
+
+**What I chose:** resolve from SQLite on demand and defer caching.
+**Why:** grants have time windows, permission changes bump versions, and the personalized suite
+changes the catalogue itself. Fresh reads passed all 53 resolution and personalization checks;
+resolveDevices query growth is recorded as an open Phase 8 measurement.
+**What I rejected:** a process cache keyed only by user and org. It would need invalidation for
+permission-version changes and time-bound grant expiry, creating stale-authority failure modes.
+**What would change my mind:** measured latency outside the stated target after the batched query
+path is made constant with respect to device count.
+
 ## Where this repo argues with itself
 
 ### The published root and generated handout disagree about what ships

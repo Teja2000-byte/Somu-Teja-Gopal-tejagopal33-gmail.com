@@ -44,8 +44,19 @@ algorithm substitution, truncated signatures, and exp equal to the current secon
 
 ## Phase 2 — caller context and the resolution engine
 
-_This is where most people's first model is wrong. Write down the model you started with, the
-observation that broke it, and the model you moved to. Be specific about the observation._
+### 2026-09-26 · Scope, precedence, and the unknown catalogue
+
+My first mental model treated an org-level answer as role baseline plus org-wide grants. Reading
+the contract again broke that model: navigation is the union across devices, so a device-only
+allow can make an org-level surface appear. I changed the design before coding to resolve the
+org scope first and merge allowed answers from each visible device, while exact device checks
+still consider only org-wide and that device's grants.
+
+The first implementation passed 35/35 permission vectors and 18/18 personalized vectors. It
+proves deny precedence across scopes, wildcard expansion, half-open windows, suspended empty sets,
+and provenance for a permission absent from every document. I also noticed resolveDevices still
+repeats the resolution queries per device; it is correct but grows with row count, so query-count
+measurement remains an explicit Phase 8 item.
 
 ## Phase 3 — orgs, members, invites
 
