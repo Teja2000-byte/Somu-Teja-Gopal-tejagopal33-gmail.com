@@ -3,7 +3,6 @@ import { resolve } from './permissions.js';
 
 // Shared domain rules: role ranks, last-owner protection, ending sessions.
 //
-// YOURS TO WRITE. This file ships as a stub.
 //
 // Put here the rules more than one route needs, so "what ends a session" has exactly
 // one implementation. Sources: PERMISSIONS.md §7.2 and D8.
@@ -14,12 +13,6 @@ import { resolve } from './permissions.js';
 //     the modelling error the auditor role exists to catch.
 //   - a permission change does NOT end a session in flight (grantfathering). Suspension,
 //     membership removal and device transfer DO. See PERMISSIONS.md §7.
-
-const todo = (name) =>
-  Object.assign(
-    new Error(`TODO: server/lifecycle.js — ${name}() is yours to write (BRIEF.md §3).`),
-    { code: 'NOT_IMPLEMENTED' }
-  );
 
 export function roleRanks(db) { return Object.fromEntries(db.prepare('SELECT key,rank FROM roles').all().map((r) => [r.key, r.rank])); }
 export function assertRoleExists(db, role) { if (!db.prepare('SELECT 1 FROM roles WHERE key=?').get(role)) throw badRequest('unknown role'); }

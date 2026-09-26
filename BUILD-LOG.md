@@ -152,7 +152,11 @@ catalogue/membership/grant queries for every row. I fixed all three before submi
 The selected org now lives in a narrow HttpOnly/SameSite/Secure cookie and a manual Globex switch
 survived reload. Session reads lazily transition overdue active rows to ended/session_expired.
 resolveDevices now loads the catalogue, membership, baseline, and active grants once and evaluates
-all requested devices in memory. All five supplied suites stayed green after these changes.
+all requested devices in memory. A final audit also centralized recording for authenticated 403s,
+while the session wrapper marks its denial as already recorded to avoid duplicates. All five
+supplied suites stayed green after these changes. One browser run hit a Playwright route teardown
+race after an interception test (24/25); the immediate full rerun passed 25/25, and the reported
+failure was the old route callback finishing after its test—not an application assertion.
 
 ### 2026-09-26 · Post-review — visible controls must perform their actions
 

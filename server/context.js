@@ -3,8 +3,6 @@ import { forbidden, notFound, unauthenticated } from './http.js';
 
 // Per-request context: turn a bearer token into an authenticated caller.
 //
-// YOURS TO WRITE. This file ships as a stub so the server boots and every
-// authenticated request fails loudly instead of appearing to work.
 //
 // What it has to do (BRIEF.md §3, PERMISSIONS.md §6):
 //   - read the bearer token, verify it with verifyAccessToken() from ./auth.js
@@ -18,12 +16,6 @@ import { forbidden, notFound, unauthenticated } from './http.js';
 //
 // authenticate(db, secret) returns (req, params) => caller, where caller carries at
 // least { userId, orgId, role, membership, claims }.
-
-const todo = () =>
-  Object.assign(
-    new Error('TODO: server/context.js — authenticate() is yours to write (BRIEF.md §3).'),
-    { code: 'NOT_IMPLEMENTED' }
-  );
 
 export function authenticate(db, secret) {
   return function buildContext(req, params) {

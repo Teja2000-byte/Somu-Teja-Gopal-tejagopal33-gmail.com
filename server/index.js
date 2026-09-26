@@ -15,6 +15,7 @@ import { openDatabase } from './db.js';
 import { send, sendError, readJson, notFound } from './http.js';
 import { authenticate } from './context.js';
 import { registerRoutes } from './routes/index.js';
+import { audit } from './audit.js';
 
 const DEV = process.env.NODE_ENV !== 'production';
 const PORT = Number(process.env.PORT ?? 8080);
@@ -38,12 +39,14 @@ const PUBLIC_ROUTES = new Set([
 // ---------------------------------------------------------------------------
 async function handleApi(req, res, url) {
   const requestId = `req_${crypto.randomUUID().slice(0, 8)}`;
+  let hit;
+  let ctx;
 
   try {
-    const hit = router.match(req.method, url.pathname);
+    hit = router.match(req.method, url.pathname);
     if (!hit) throw notFound();
 
-    const ctx = { db, secret: SECRET, requestId, query: url.searchParams, body: {}, req };
+    ctx = { db, secret: SECRET, requestId, query: url.searchParams, body: {}, req };
 
     const key = `${req.method} ${hit.pattern}`;
     if (!PUBLIC_ROUTES.has(key)) {
@@ -56,6 +59,20 @@ async function handleApi(req, res, url) {
 
     await hit.handler(ctx, hit.params, res);
   } catch (err) {
+    if (ctx?.userId && err?.status === 403 && !err.audited) {
+      try {
+        audit(db, {
+          orgId: ctx.orgId,
+          actorId: ctx.userId,
+          action: 'http.deny.' + req.method.toLowerCase(),
+          targetType: 'route',
+          targetId: hit?.pattern ?? url.pathname,
+          result: 'deny',
+          reasonCode: err.reason,
+          requestId,
+        });
+      } catch { /* preserve the original authorization response */ }
+    }
     sendError(res, err, requestId);
   }
 }
