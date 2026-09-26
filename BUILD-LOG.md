@@ -31,8 +31,16 @@ could not bind port 8123 inside the restricted shell, so that suite needs local-
 
 ## Phase 1 — token verification
 
-_What did you expect each failure mode to look like before you ran it? Which one behaved
-differently from your expectation, and what did that tell you?_
+### 2026-09-26 · Pin format before trusting claims
+
+I expected Buffer's base64url decoder to reject malformed signature text. It is permissive: input
+such as punctuation can decode to an empty buffer. I therefore validate every compact-token segment
+against the base64url alphabet before decoding, and compare signature lengths before calling
+timingSafeEqual (which throws when lengths differ). The implementation validates structure,
+header, signature, and claims in that order and maps every failure to the same 401 response.
+
+Evidence: node scripts/check-jwt.js moved from 0/43 to 43/43, including malformed encoding,
+algorithm substitution, truncated signatures, and exp equal to the current second.
 
 ## Phase 2 — caller context and the resolution engine
 

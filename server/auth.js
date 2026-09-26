@@ -71,12 +71,46 @@ export function issueAccessToken({ userId, orgId, role, permVersion }, secret) {
 // `node scripts/check-jwt.js` is the public test suite for this function.
 // ---------------------------------------------------------------------------
 export function verifyAccessToken(token, secret) {
-  // YOURS TO WRITE. Every failure mode listed above must be a 401 UNAUTHENTICATED.
-  // `node scripts/check-jwt.js` is the public suite for this function.
-  throw Object.assign(
-    new Error('TODO: server/auth.js — verifyAccessToken() is yours to write (AUTH-DATA-MODEL.md §10).'),
-    { code: 'NOT_IMPLEMENTED' }
-  );
+  const reject = () => { throw unauthenticated('invalid access token'); };
+
+  if (typeof token !== 'string') reject();
+  const parts = token.split('.');
+  if (parts.length !== 3 || parts.some((part) => !part)) reject();
+
+  const [encodedHeader, encodedPayload, encodedSignature] = parts;
+  const base64url = /^[A-Za-z0-9_-]+$/;
+  if (![encodedHeader, encodedPayload, encodedSignature].every((part) => base64url.test(part))) reject();
+
+  let header;
+  let claims;
+  try {
+    header = JSON.parse(unb64(encodedHeader).toString('utf8'));
+    claims = JSON.parse(unb64(encodedPayload).toString('utf8'));
+  } catch {
+    reject();
+  }
+
+  if (!header || typeof header !== 'object' || Array.isArray(header)) reject();
+  if (!claims || typeof claims !== 'object' || Array.isArray(claims)) reject();
+  if (header.alg !== ALG || header.typ !== 'JWT') reject();
+
+  let actual;
+  try {
+    actual = unb64(encodedSignature);
+  } catch {
+    reject();
+  }
+  const expected = createHmac('sha256', secret)
+    .update(encodedHeader + '.' + encodedPayload)
+    .digest();
+  if (actual.length !== expected.length || !timingSafeEqual(actual, expected)) reject();
+
+  const now = Math.floor(Date.now() / 1000);
+  if (typeof claims.exp !== 'number' || !Number.isFinite(claims.exp) || claims.exp <= now) reject();
+  if (claims.iss !== ISS || claims.aud !== AUD) reject();
+  if (typeof claims.jti !== 'string' || claims.jti.length === 0) reject();
+
+  return claims;
 }
 
 

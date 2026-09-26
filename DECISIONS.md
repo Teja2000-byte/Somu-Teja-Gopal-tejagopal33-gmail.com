@@ -23,6 +23,21 @@ device:reboot now and whatever unseen permission the grading fixture creates.
 **What would change my mind:** a migration that removes these catalogue tables and defines an
 immutable, versioned policy in application code.
 
+---
+
+### Reject malformed JWTs through one indistinguishable error path
+
+**What I chose:** validate compact structure and base64url characters before JSON decoding, pin
+HS256/JWT, compare the HMAC in constant time, then validate claims; all failures become the same
+401 UNAUTHENTICATED response.
+**Why:** Phase 1 showed Node's base64url decoder accepts malformed punctuation rather than reliably
+throwing. scripts/check-jwt.js exercises 43 cases and now passes all 43, including malformed input,
+algorithm substitution, and signatures with a different length.
+**What I rejected:** decoding first and relying on exceptions. Permissive decoding makes malformed
+input proceed farther than intended, while timingSafeEqual itself throws on unequal lengths.
+**What would change my mind:** adopting a maintained JWT library with equally strict algorithm,
+claim, and error-normalization behavior.
+
 ## Where this repo argues with itself
 
 ### The published root and generated handout disagree about what ships
