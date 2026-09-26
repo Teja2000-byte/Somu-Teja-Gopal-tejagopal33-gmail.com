@@ -11,23 +11,23 @@ gives nothing away.
 
 ---
 
-<!-- EXAMPLE — delete this block, keep the shape.
-
-## 2026-03-04 · Phase 0 — orientation
-
-Expected the unknown-permission test to fail on my validation code.
-Observed: it passed, with foreign_keys ON, and *also* passed with the pragma removed — so the
-check was never running, and the "pass" was the schema loading fine while enforcing nothing.
-Changed: moved `foreign_keys = ON` to connection open and re-ran; now it raises
-`FOREIGN KEY constraint failed` as the README said it would.
-Note: this is the failure mode where a passing test is worse than a failing one.
-
--->
-
 ## Phase 0 — orientation
 
-_Installed, reset the database, read the documents, ran the suites against the untouched skeleton.
-What did the starting line actually look like, and which failure surprised you?_
+### 2026-09-26 · Clean handout and baseline
+
+Expected the repository named in the invitation to be directly forkable as the candidate starter.
+Observed: the fork included organizer files and a complete reference application, while the root
+README says the candidate handout is generated under the starter directory. I renamed that
+accidental fork and created the submission repository from the handout only so reference code never
+entered the submission history. The handout also omitted five documents its own README cites; I
+used the upstream copies labelled candidate-facing as requirements and recorded the mismatch in
+DECISIONS.md.
+
+After npm ci and npm run db:reset, the personalized fixture contained 20 permissions, including
+undocumented device:reboot, and an undocumented reviewer role. This confirmed that the runtime
+database catalogue must drive resolution. Baseline results were JWT 0/43, permissions and
+personalization stopping at their stubs, and a successful placeholder web build. The API check
+could not bind port 8123 inside the restricted shell, so that suite needs local-process permission.
 
 ## Phase 1 — token verification
 
