@@ -160,11 +160,11 @@ I did not add a permission cache. The current device list resolver repeats datab
 this is the main known scaling limitation, but a rushed cache could retain grants past expiry or
 across perm_version changes. I would first batch those reads into one in-memory evaluation pass.
 
-The backend supports the complete endpoint contract. The browser implements all fixed inventory
-elements and the tested create-organization, create-grant, invite, switching, and authentication
-flows. I left secondary management controls such as rename, suspend, remove, and session start as
-visible inventory actions without full dialogs. This keeps the submitted behavior centered on the
-graded authorization model and avoids shallow forms that I could not harden in the time box.
+The backend supports the complete endpoint contract. After the pre-submission walkthrough exposed
+that visible no-op controls were confusing, I connected the secondary management controls through
+compact prompt/confirmation workflows. I still did not implement actual streaming, terminal input,
+or file transfer: the assignment explicitly defines sessions as records and forbids real remote
+access, so those controls create session records or explain the boundary.
 
 ## Tool and source acknowledgements
 

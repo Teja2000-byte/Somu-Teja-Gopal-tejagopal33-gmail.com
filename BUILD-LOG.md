@@ -142,6 +142,19 @@ SameSite=Strict, Secure, and a narrow path.
 
 ## Open threads
 
+### 2026-09-26 · Post-review — visible controls must perform their actions
+
+During the pre-submission walkthrough, clicking View and Remove exposed that several inventory
+buttons rendered the correct permission state but had no event handlers. The API was implemented,
+but the user-visible workflow was incomplete. I connected device session/add/rename/remove,
+member invite/role/suspend/remove, grant revoke, session start/stop, and organization rename/delete
+to the existing endpoints, with confirmations for destructive actions and visible results.
+
+The 25-case browser suite stayed green. A manual View click displayed session
+ses_1aa8182fc4144c8d, and a direct SQLite read confirmed that exact id as an active view session on
+dev_build_server_01. File transfer remains intentionally simulated because the task explicitly
+forbids real remote access; the button now explains that boundary instead of doing nothing.
+
 resolveDevices currently reuses the exact same resolution function for every device, which is easy
 to verify but adds queries as device count grows. With another iteration I would load catalogue,
 membership, baseline, and grants once, then evaluate every device in memory and measure the query
