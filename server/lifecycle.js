@@ -51,3 +51,6 @@ export function sessionExpiry(db, orgId) {
   if(!minutes) throw badRequest('organization has invalid session limit');
   return new Date(Date.now()+minutes*60000).toISOString();
 }
+export function expireSessions(db, orgId) {
+  return db.prepare("UPDATE sessions SET state='ended',end_reason='session_expired',ended_at=expires_at WHERE org_id=? AND state IN ('connecting','active') AND expires_at<=?").run(orgId,new Date().toISOString()).changes;
+}

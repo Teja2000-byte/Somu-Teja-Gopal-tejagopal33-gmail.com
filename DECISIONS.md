@@ -156,9 +156,8 @@ JavaScript asset and the same removed bug until npm run build regenerated dist.
 
 ## Deliberately not built
 
-I did not add a permission cache. The current device list resolver repeats database reads per row;
-this is the main known scaling limitation, but a rushed cache could retain grants past expiry or
-across perm_version changes. I would first batch those reads into one in-memory evaluation pass.
+I did not add a cross-request permission cache. The device list now batches its policy reads and
+evaluates rows in memory, while each request still sees current grant windows and membership state.
 
 The backend supports the complete endpoint contract. After the pre-submission walkthrough exposed
 that visible no-op controls were confusing, I connected the secondary management controls through

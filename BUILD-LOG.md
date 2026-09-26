@@ -142,6 +142,18 @@ SameSite=Strict, Secure, and a narrow path.
 
 ## Open threads
 
+### 2026-09-26 · Final submission audit — hidden-risk fixes
+
+A requirement-by-requirement review after the public suites were green found three concrete risks:
+refresh returned the alphabetically first membership instead of the last selected organization,
+expired sessions remained active until another lifecycle event, and resolveDevices re-ran the
+catalogue/membership/grant queries for every row. I fixed all three before submission.
+
+The selected org now lives in a narrow HttpOnly/SameSite/Secure cookie and a manual Globex switch
+survived reload. Session reads lazily transition overdue active rows to ended/session_expired.
+resolveDevices now loads the catalogue, membership, baseline, and active grants once and evaluates
+all requested devices in memory. All five supplied suites stayed green after these changes.
+
 ### 2026-09-26 · Post-review — visible controls must perform their actions
 
 During the pre-submission walkthrough, clicking View and Remove exposed that several inventory
@@ -155,13 +167,9 @@ ses_1aa8182fc4144c8d, and a direct SQLite read confirmed that exact id as an act
 dev_build_server_01. File transfer remains intentionally simulated because the task explicitly
 forbids real remote access; the button now explains that boundary instead of doing nothing.
 
-resolveDevices currently reuses the exact same resolution function for every device, which is easy
-to verify but adds queries as device count grows. With another iteration I would load catalogue,
-membership, baseline, and grants once, then evaluate every device in memory and measure the query
-count before and after. I did not add a cache because time-window expiry and permission-version
-invalidation make stale authority a higher risk than the current small-fixture cost.
+I did not add a cross-request permission cache. Resolution reads current rows on every request, so
+time-window expiry and permission-version changes cannot leave stale authority behind.
 
-The console implements every interaction exercised by the published UI contract. Several visible
-management buttons are presentation-only beyond those tested (for example rename and suspend); the
-corresponding APIs are implemented, but full modal workflows were left out to keep the two-day scope
-focused on authorization correctness.
+The console implements every interaction exercised by the published UI contract. The visible
+management controls are connected to the matching endpoints through compact prompt and confirmation
+flows; real streaming, command execution, and file transfer remain outside the stated scope.
