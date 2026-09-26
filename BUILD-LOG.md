@@ -125,10 +125,30 @@ interception test removed Control without any role logic in the browser.
 
 ## Phase 8 — hardening
 
-_What did you measure, what did you fix, and what did you deliberately leave alone? Anything you
-chose not to build belongs here with its reason._
+### 2026-09-26 · Final contract run and edge ordering
+
+A clean reset followed by the full run produced 43/43 JWT, 35/35 permission, 18/18 personalized,
+66/66 API, and 25/25 browser assertions. The browser suite took 9.9 seconds; each tested login and
+initial screen completed in under one second in its trace output.
+
+Reviewing suspended tokens exposed an ordering ambiguity: suspension increments perm_version, so
+checking freshness first returned TOKEN_STALE before the specified suspended 403 could be reached.
+I reversed those two checks: removed membership is 401, suspended is 403 suspended, and only an
+active membership is compared for freshness. The public API and browser suites remained green.
+
+I also fixed npm test to build the production bundle before Playwright, matching the config comment
+and preventing stale assets from creating false results. Refresh cookies now include HttpOnly,
+SameSite=Strict, Secure, and a narrow path.
 
 ## Open threads
 
-_Things you know are wrong, unfinished, or that you would do differently with another day. Listing
-these honestly is worth more than pretending they do not exist — we will find them anyway._
+resolveDevices currently reuses the exact same resolution function for every device, which is easy
+to verify but adds queries as device count grows. With another iteration I would load catalogue,
+membership, baseline, and grants once, then evaluate every device in memory and measure the query
+count before and after. I did not add a cache because time-window expiry and permission-version
+invalidation make stale authority a higher risk than the current small-fixture cost.
+
+The console implements every interaction exercised by the published UI contract. Several visible
+management buttons are presentation-only beyond those tested (for example rename and suspend); the
+corresponding APIs are implemented, but full modal workflows were left out to keep the two-day scope
+focused on authorization correctness.

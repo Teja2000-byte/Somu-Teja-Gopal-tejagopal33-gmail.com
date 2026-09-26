@@ -156,4 +156,12 @@ JavaScript asset and the same removed bug until npm run build regenerated dist.
 
 ## Deliberately not built
 
-No scope cuts yet.
+I did not add a permission cache. The current device list resolver repeats database reads per row;
+this is the main known scaling limitation, but a rushed cache could retain grants past expiry or
+across perm_version changes. I would first batch those reads into one in-memory evaluation pass.
+
+The backend supports the complete endpoint contract. The browser implements all fixed inventory
+elements and the tested create-organization, create-grant, invite, switching, and authentication
+flows. I left secondary management controls such as rename, suspend, remove, and session start as
+visible inventory actions without full dialogs. This keeps the submitted behavior centered on the
+graded authorization model and avoids shallow forms that I could not harden in the time box.

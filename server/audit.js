@@ -33,6 +33,7 @@ export function auditDenials(db, ctx, meta, fn) {
   try { return fn(); } catch (error) {
     if (error instanceof HttpError && error.status === 403) {
       audit(db, { orgId: ctx.orgId, actorId: ctx.userId, result: 'deny', reasonCode: error.reason, requestId: ctx.requestId, ...meta });
+      error.audited = true;
     }
     throw error;
   }

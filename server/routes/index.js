@@ -6,7 +6,7 @@ import { assertRoleExists, assertCanModify, assertNotLastOwner, endActiveSession
 import { audit, auditDenials } from '../audit.js';
 
 const cookie = (req, name) => Object.fromEntries(String(req.headers.cookie ?? '').split(';').map((v) => v.trim().split('=')))[name];
-const refreshCookie = (raw, maxAge = REFRESH_TTL_SECONDS) => 'rt=' + raw + '; HttpOnly; SameSite=Strict; Path=/v1/auth/refresh; Max-Age=' + maxAge;
+const refreshCookie = (raw, maxAge = REFRESH_TTL_SECONDS) => 'rt=' + raw + '; HttpOnly; SameSite=Strict; Secure; Path=/v1/auth/refresh; Max-Age=' + maxAge;
 const requiredText = (value, name, max = 200) => { if (typeof value !== 'string' || !value.trim()) throw badRequest(name + ' is required'); const clean=value.trim(); if(clean.length>max)throw badRequest(name+' is too long'); return clean; };
 const activeMembership = (db,userId,orgId) => db.prepare("SELECT m.*,o.name AS org_name,o.theme FROM memberships m JOIN organizations o ON o.id=m.org_id AND o.deleted_at IS NULL WHERE m.user_id=? AND m.org_id=? AND m.status='active'").get(userId,orgId);
 const orgsFor = (db,userId) => db.prepare("SELECT o.id,o.name,o.theme,m.role FROM memberships m JOIN organizations o ON o.id=m.org_id AND o.deleted_at IS NULL WHERE m.user_id=? AND m.status='active' ORDER BY o.name").all(userId);
